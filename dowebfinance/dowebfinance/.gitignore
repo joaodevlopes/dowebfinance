@@ -1,0 +1,36 @@
+# --- JAVA & BUILD TOOLS ---
+# Ignora a pasta de compilação
+target/
+*.class
+
+# Ignora o Maven Wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDEs
+# Jamais suba configurações pessoais de editor
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+.settings/
+.classpath
+.project
+
+# --- SEGURANÇA E ARQUIVOS LOCAIS ---
+# Ignora arquivos de propriedades que podem conter senhas
+# O ideal é ter um application.properties.example no repo
+application-local.properties
+.env
+
+# Ignora logs e arquivos temporários
+*.log
+.apt_generated
+.factorypath
+
+# --- SISTEMA OPERACIONAL ---
+.DS_Store
+Thumbs.db

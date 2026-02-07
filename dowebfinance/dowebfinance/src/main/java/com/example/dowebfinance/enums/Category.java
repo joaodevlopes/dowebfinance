@@ -1,4 +1,5 @@
 package com.example.dowebfinance.enums;
 
-public class Category {
+public enum Category {
+    ALIMENTAÇÃO, MORADIA, LAZER, SALARIO, TRANSPORTE, INVESTIMENTO, OUTROS
 }

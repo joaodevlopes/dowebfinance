@@ -1,4 +1,5 @@
 package com.example.dowebfinance.enums;
 
-public class TransactionType {
+public enum TransactionType {
+    ENTRADA, SAIDA
 }
