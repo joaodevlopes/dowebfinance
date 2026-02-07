@@ -24,4 +24,4 @@ O projeto está sendo construído seguindo princípios de:
 - **Git Flow:** Gerenciamento organizado de branches e commits.
 
 ---
-*Desenvolvido por [João Gabriel Lima Lopes]*
+*Desenvolvido por João Gabriel Lima Lopes*
