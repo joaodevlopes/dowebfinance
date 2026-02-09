@@ -1,4 +1,4 @@
 package com.joaogabriel.qrcode.generator.dto;
 
-public record QrCodeGenerateRequest() {
+public record QrCodeGenerateRequest(String texto) {
 }
