@@ -24,31 +24,23 @@ public class ExpenseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "A descrição é obrigatória")
-    @Size(max = 255)
-    @Column(length = 255)
+    @Column(nullable = false, length = 255)
     private String description;
 
-    @NotNull(message = "O valor é obrigatório!")
-    @Positive(message = "O valor deve ser maior que 0")
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal value;
 
-    @NotNull(message = "O tipo de transação é obrigatório")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TransactionType type;
 
-    @NotNull(message = "A categoria é orbigatório")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private Category category;
 
-    @NotBlank(message = "O nome do banco é obrigatório!")
     @Column(nullable = false)
     private String bankName;
 
-    @NotNull(message = "A data da despesa é obrigatória")
     @Column(name = "expense_date", nullable = false)
     private LocalDate expenseDate;
 
@@ -66,7 +58,5 @@ public class ExpenseEntity {
             this.expenseDate = LocalDate.now();
         }
     }
-
-
 
 }
