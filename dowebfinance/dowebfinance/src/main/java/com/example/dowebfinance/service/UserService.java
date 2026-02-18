@@ -1,73 +1,89 @@
 package com.example.dowebfinance.service;
 
+import com.example.dowebfinance.dtos.UserRequestDTO;
+import com.example.dowebfinance.dtos.UserResponseDTO;
 import com.example.dowebfinance.entity.UserEntity;
+import com.example.dowebfinance.mapper.UserMapper;
 import com.example.dowebfinance.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class UserService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
     }
 
-    //Cadastro de usuario:
-    public UserEntity cadastrar(UserEntity usuario){
-        Optional<UserEntity> usuarioExistente = userRepository.findByEmail(usuario.getEmail());
+    // Cadastro
+    @Transactional
+    public UserResponseDTO cadastrar(UserRequestDTO dto) {
 
-        if(usuarioExistente.isPresent()){
-            throw new RuntimeException("Este e-mail já esta cadastrado!");
+        if (userRepository.findByEmail(dto.email()).isPresent()) {
+            throw new RuntimeException("Este e-mail já está cadastrado");
         }
 
-        String senhaCriptografada = passwordEncoder.encode(usuario.getPassword());
-        usuario.setPassword(senhaCriptografada);
+        UserEntity usuario = userMapper.toEntity(dto);
 
-        return userRepository.save(usuario);
+        usuario.setPassword(passwordEncoder.encode(dto.password()));
+
+        UserEntity usuarioSalvo = userRepository.save(usuario);
+
+        return userMapper.toResponse(usuarioSalvo);
     }
 
-    //Buscar por ID:
-    public UserEntity buscaPorId(Long id){
+    // Buscar por id (para API)
+    public UserResponseDTO buscarPorId(Long id) {
+        return userMapper.toResponse(buscarPorIdEntidade(id));
+    }
+
+    // Buscar por id (uso interno)
+    public UserEntity buscarPorIdEntidade(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Usuário não encontrado!"));
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 
-    //Buscar por email:
-    public UserEntity buscarPorEmail(String email){
-        return userRepository.findByEmail(email)
-                .orElseThrow(()-> new RuntimeException("E-mail não encontrado, digite um email válido!"));
+    // Atualizar — email e senha são ignorados pelo mapper intencionalmente,
+    // pois ambos têm regras de negócio que precisam ser tratadas aqui
+    @Transactional
+    public UserResponseDTO atualizar(Long id, UserRequestDTO dto) {
+
+        UserEntity usuarioExistente = buscarPorIdEntidade(id);
+
+        // Email: verificamos unicidade antes de atualizar manualmente,
+        // pois o mapper o ignora (evita sobrescrever sem validação)
+        if (!usuarioExistente.getEmail().equals(dto.email())) {
+            if (userRepository.findByEmail(dto.email()).isPresent()) {
+                throw new RuntimeException("Este e-mail já está em uso");
+            }
+            usuarioExistente.setEmail(dto.email());
+        }
+
+        // O mapper atualiza apenas: name (campos sem regra especial)
+        userMapper.updateEntityFromDto(dto, usuarioExistente);
+
+        // Senha: também ignorada pelo mapper, tratada aqui por precisar de hash
+        if (dto.password() != null && !dto.password().isBlank()) {
+            usuarioExistente.setPassword(passwordEncoder.encode(dto.password()));
+        }
+
+        UserEntity usuarioAtualizado = userRepository.save(usuarioExistente);
+
+        return userMapper.toResponse(usuarioAtualizado);
     }
 
-    //Atualizar dados
-    public UserEntity atualizar(Long id, UserEntity dadosAtualizados){
-        UserEntity usuario = buscaPorId(id);
-        //Atualiza o nome:
-        if(dadosAtualizados.getName() != null && !dadosAtualizados.getName().isEmpty()){
-            usuario.setName(dadosAtualizados.getName());
-        }
-        //Atualiza senha:
-        if(dadosAtualizados.getPassword()!= null && !dadosAtualizados.getPassword().isEmpty()){
-            usuario.setPassword(passwordEncoder.encode(dadosAtualizados.getPassword()));
-        }
-        return userRepository.save(usuario);
+    // Deletar
+    public void deletarUsuario(Long id) {
 
+        UserEntity usuario = buscarPorIdEntidade(id);
+
+        userRepository.delete(usuario);
     }
-
-    //Deletar usúario:
-     public void deletarUsuario(Long id){
-        if(!userRepository.existsById(id)){
-            throw new RuntimeException("Usuário não encontrado");
-        }
-         userRepository.deleteById(id);
-     }
-
-
-
-
 }

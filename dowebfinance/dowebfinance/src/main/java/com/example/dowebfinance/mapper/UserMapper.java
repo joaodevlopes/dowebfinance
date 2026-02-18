@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "Spring")
+@Mapper(componentModel = "spring")
 public interface UserMapper {
     // Converter o request (o que vai chegar) em Entidade (o que salva no banco de dados)
     UserEntity toEntity(UserRequestDTO request);

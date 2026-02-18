@@ -3,89 +3,87 @@ package com.example.dowebfinance.service;
 import com.example.dowebfinance.dtos.ExpenseRequestDTO;
 import com.example.dowebfinance.dtos.ExpenseResponseDTO;
 import com.example.dowebfinance.entity.ExpenseEntity;
+import com.example.dowebfinance.entity.UserEntity;
 import com.example.dowebfinance.mapper.ExpenseMapper;
 import com.example.dowebfinance.repository.ExpenseRepository;
-import com.example.dowebfinance.repository.UserRepository;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.util.BeanUtil;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 public class ExpenseService {
-    private final ExpenseRepository expenseRepository;
-    private final UserRepository userRepository;
-    @Autowired
-    private ExpenseMapper expenseMapper;
 
-    public ExpenseService(ExpenseRepository expenseRepository, UserRepository userRepository){
+    private final ExpenseRepository expenseRepository;
+    private final ExpenseMapper expenseMapper;
+    private final UserService userService;
+
+    public ExpenseService(ExpenseRepository expenseRepository, ExpenseMapper expenseMapper, UserService userService) {
         this.expenseRepository = expenseRepository;
-        this.userRepository = userRepository;
+        this.expenseMapper = expenseMapper;
+        this.userService = userService;
     }
 
-    //Salvar despesa:(POST)
-    public ExpenseResponseDTO salvarDespesa(ExpenseRequestDTO dto){
-        //Converte Request que o usuário mandou em formato do banco no caso ENTITY
+    // Salvar despesa (POST)
+    @Transactional
+    public ExpenseResponseDTO salvarDespesa(ExpenseRequestDTO dto) {
+
+        UserEntity usuario = userService.buscarPorIdEntidade(dto.userId());
+
         ExpenseEntity despesa = expenseMapper.toEntity(dto);
+        despesa.setUser(usuario);
 
-        //Verifica se o dono da despesa existe
-        if(!userRepository.existsById(dto.userId())){
-            throw new RuntimeException("Usuário não encontrado");
-        }
-
-        //Salvar a enttidade no banco
         ExpenseEntity despesaSalva = expenseRepository.save(despesa);
 
-        //Transforma a entity salva em um response para devolver pro usuário
         return expenseMapper.toResponse(despesaSalva);
-
     }
 
-    //Listar as despesas por usuario:(GET)
-    public List<ExpenseResponseDTO> listarDespesasPorUsuario(Long userId){
+    // Listar despesas por usuário (GET)
+    public List<ExpenseResponseDTO> listarDespesasPorUsuario(Long userId) {
+
+        // Valida se o usuário existe antes de buscar as despesas
+        userService.buscarPorIdEntidade(userId);
 
         List<ExpenseEntity> despesas = expenseRepository.findByUserId(userId);
 
-        // Transformar a lista de entity em uma lista de ResponseDTO
         return despesas.stream()
                 .map(expenseMapper::toResponse)
                 .toList();
     }
 
-    //Buscar as despesas por id (GET)
-    public ExpenseResponseDTO  buscarDespesaPorId(Long id){
+    // Buscar despesa por id (GET)
+    public ExpenseResponseDTO buscarDespesaPorId(Long id) {
 
         ExpenseEntity despesa = expenseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Não tem despesas com esse ID!"));
+                .orElseThrow(() -> new RuntimeException("Despesa não encontrada!"));
 
-        //Transformar em uma responseDto:
         return expenseMapper.toResponse(despesa);
     }
 
-    //Editar Despesas (UPDATE)
+    // Editar despesa (PUT)
+    @Transactional
     public ExpenseResponseDTO editarDespesas(Long id, ExpenseRequestDTO dto) {
 
         ExpenseEntity despesaExistente = expenseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Despesa não encontrada para editar!"));
 
+        // Se o userId mudou, busca o novo usuário e valida que ele existe
+        UserEntity usuario = userService.buscarPorIdEntidade(dto.userId());
+
         expenseMapper.updateEntityFromDto(dto, despesaExistente);
+        despesaExistente.setUser(usuario);
 
         ExpenseEntity despesaSalva = expenseRepository.save(despesaExistente);
 
         return expenseMapper.toResponse(despesaSalva);
-
     }
 
-    //Deletar despesa (DELETE)
-    public void deletarDespesa(Long id){
-        if(!expenseRepository.existsById(id)){
-            throw new RuntimeException("Não existe despesa a ser deletada!");
-        }
-        expenseRepository.deleteById(id);
+    // Deletar despesa (DELETE)
+    @Transactional
+    public void deletarDespesa(Long id) {
+        ExpenseEntity despesa = expenseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Despesa não encontrada para deletar!"));
+
+        expenseRepository.delete(despesa);
     }
-
-
 }
