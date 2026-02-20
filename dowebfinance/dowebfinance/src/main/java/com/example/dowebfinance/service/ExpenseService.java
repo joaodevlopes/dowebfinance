@@ -4,6 +4,7 @@ import com.example.dowebfinance.dtos.ExpenseRequestDTO;
 import com.example.dowebfinance.dtos.ExpenseResponseDTO;
 import com.example.dowebfinance.entity.ExpenseEntity;
 import com.example.dowebfinance.entity.UserEntity;
+import com.example.dowebfinance.exception.ResourceNotFoundException;
 import com.example.dowebfinance.mapper.ExpenseMapper;
 import com.example.dowebfinance.repository.ExpenseRepository;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,7 @@ public class ExpenseService {
     public ExpenseResponseDTO buscarDespesaPorId(Long id) {
 
         ExpenseEntity despesa = expenseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Despesa não encontrada!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Despesa não encontrada!"));
 
         return expenseMapper.toResponse(despesa);
     }
@@ -65,7 +66,7 @@ public class ExpenseService {
     public ExpenseResponseDTO editarDespesas(Long id, ExpenseRequestDTO dto) {
 
         ExpenseEntity despesaExistente = expenseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Despesa não encontrada para editar!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Despesa não encontrada para editar!"));
 
         // Se o userId mudou, busca o novo usuário e valida que ele existe
         UserEntity usuario = userService.buscarPorIdEntidade(dto.userId());
@@ -82,7 +83,7 @@ public class ExpenseService {
     @Transactional
     public void deletarDespesa(Long id) {
         ExpenseEntity despesa = expenseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Despesa não encontrada para deletar!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Despesa não encontrada para deletar!"));
 
         expenseRepository.delete(despesa);
     }

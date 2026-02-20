@@ -3,11 +3,13 @@ package com.example.dowebfinance.service;
 import com.example.dowebfinance.dtos.UserRequestDTO;
 import com.example.dowebfinance.dtos.UserResponseDTO;
 import com.example.dowebfinance.entity.UserEntity;
+import com.example.dowebfinance.exception.BusinessException;
+import com.example.dowebfinance.exception.ResourceNotFoundException;
 import com.example.dowebfinance.mapper.UserMapper;
 import com.example.dowebfinance.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -27,7 +29,7 @@ public class UserService {
     public UserResponseDTO cadastrar(UserRequestDTO dto) {
 
         if (userRepository.findByEmail(dto.email()).isPresent()) {
-            throw new RuntimeException("Este e-mail já está cadastrado");
+            throw new BusinessException("Este e-mail já está cadastrado");
         }
 
         UserEntity usuario = userMapper.toEntity(dto);
@@ -47,7 +49,7 @@ public class UserService {
     // Buscar por id (uso interno)
     public UserEntity buscarPorIdEntidade(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
     // Atualizar — email e senha são ignorados pelo mapper intencionalmente,
@@ -61,7 +63,7 @@ public class UserService {
         // pois o mapper o ignora (evita sobrescrever sem validação)
         if (!usuarioExistente.getEmail().equals(dto.email())) {
             if (userRepository.findByEmail(dto.email()).isPresent()) {
-                throw new RuntimeException("Este e-mail já está em uso");
+                throw new BusinessException("Este e-mail já está em uso");
             }
             usuarioExistente.setEmail(dto.email());
         }
