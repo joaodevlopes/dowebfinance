@@ -1,0 +1,12 @@
+# Configuração do Banco de Dados PostgreSQL
+spring.datasource.url=jdbc:postgresql://localhost:5432/nome_do_seu_banco
+spring.datasource.username=seu_usuario_aqui
+spring.datasource.password=sua_senha_aqui
+
+# Configurações do Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# Configurações do Servidor
+server.port=8080
