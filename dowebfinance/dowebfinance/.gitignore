@@ -21,8 +21,9 @@ out/
 .project
 
 # --- SEGURANÇA E ARQUIVOS LOCAIS ---
-# Ignora arquivos de propriedades que podem conter senhas
-# O ideal é ter um application.properties.example no repo
+# Ignora o arquivo principal de propriedades (onde estão suas senhas)
+src/main/resources/application.properties
+
 application-local.properties
 .env
 
