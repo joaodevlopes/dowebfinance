@@ -22,7 +22,7 @@ public class ExpenseController {
         this.expenseService = expenseService;
     }
 
-    // POST /api/expenses
+    // POST com authenticationprincipal /api/expenses
     @PostMapping
     public ResponseEntity<ExpenseResponseDTO> criar(
             @Valid @RequestBody ExpenseRequestDTO dto,
