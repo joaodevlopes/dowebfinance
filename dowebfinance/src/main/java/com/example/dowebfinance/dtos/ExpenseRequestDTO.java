@@ -29,8 +29,6 @@ public record ExpenseRequestDTO(
         String bankName,
 
         @NotNull(message = "A data da despesa é obrigatória")
-        LocalDate expenseDate,
+        LocalDate expenseDate
 
-        @NotNull(message = "O ID do usuário é obrigatório")
-        Long userId
 ) {}

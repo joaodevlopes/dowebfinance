@@ -9,6 +9,9 @@ import com.example.dowebfinance.mapper.ExpenseMapper;
 import com.example.dowebfinance.repository.ExpenseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.dowebfinance.entity.UserEntity;
+
 
 import java.util.List;
 
@@ -27,63 +30,62 @@ public class ExpenseService {
 
     // Salvar despesa (POST)
     @Transactional
-    public ExpenseResponseDTO salvarDespesa(ExpenseRequestDTO dto) {
-
-        UserEntity usuario = userService.buscarPorIdEntidade(dto.userId());
-
+    public ExpenseResponseDTO salvarDespesa(ExpenseRequestDTO dto, UserEntity usuarioLogado) {
         ExpenseEntity despesa = expenseMapper.toEntity(dto);
-        despesa.setUser(usuario);
-
+        despesa.setUser(usuarioLogado);
         ExpenseEntity despesaSalva = expenseRepository.save(despesa);
-
         return expenseMapper.toResponse(despesaSalva);
     }
 
     // Listar despesas por usuário (GET)
-    public List<ExpenseResponseDTO> listarDespesasPorUsuario(Long userId) {
-
-        // Valida se o usuário existe antes de buscar as despesas
-        userService.buscarPorIdEntidade(userId);
-
-        List<ExpenseEntity> despesas = expenseRepository.findByUserId(userId);
-
+    public List<ExpenseResponseDTO> listarDespesasPorUsuario(UserEntity usuarioLogado) {
+        List<ExpenseEntity> despesas = expenseRepository.findByUserId(usuarioLogado.getId());
         return despesas.stream()
                 .map(expenseMapper::toResponse)
                 .toList();
     }
 
     // Buscar despesa por id (GET)
-    public ExpenseResponseDTO buscarDespesaPorId(Long id) {
-
+    public ExpenseResponseDTO buscarDespesaPorId(Long id, UserEntity usuarioLogado) {
         ExpenseEntity despesa = expenseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Despesa não encontrada!"));
+
+        // Garante que a despesa pertence ao usuário logado
+        if (!despesa.getUser().getId().equals(usuarioLogado.getId())) {
+            throw new ResourceNotFoundException("Despesa não encontrada!");
+        }
 
         return expenseMapper.toResponse(despesa);
     }
 
     // Editar despesa (PUT)
     @Transactional
-    public ExpenseResponseDTO editarDespesas(Long id, ExpenseRequestDTO dto) {
-
+    public ExpenseResponseDTO editarDespesas(Long id, ExpenseRequestDTO dto, UserEntity usuarioLogado) {
         ExpenseEntity despesaExistente = expenseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Despesa não encontrada para editar!"));
 
-        // Se o userId mudou, busca o novo usuário e valida que ele existe
-        UserEntity usuario = userService.buscarPorIdEntidade(dto.userId());
+        // Garante que a despesa pertence ao usuário logado
+        if (!despesaExistente.getUser().getId().equals(usuarioLogado.getId())) {
+            throw new ResourceNotFoundException("Despesa não encontrada para editar!");
+        }
 
         expenseMapper.updateEntityFromDto(dto, despesaExistente);
-        despesaExistente.setUser(usuario);
+        despesaExistente.setUser(usuarioLogado);
 
         ExpenseEntity despesaSalva = expenseRepository.save(despesaExistente);
-
         return expenseMapper.toResponse(despesaSalva);
     }
 
     // Deletar despesa (DELETE)
     @Transactional
-    public void deletarDespesa(Long id) {
+    public void deletarDespesa(Long id, UserEntity usuarioLogado) {
         ExpenseEntity despesa = expenseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Despesa não encontrada para deletar!"));
+
+        // Garante que a despesa pertence ao usuário logado
+        if (!despesa.getUser().getId().equals(usuarioLogado.getId())) {
+            throw new ResourceNotFoundException("Despesa não encontrada para deletar!");
+        }
 
         expenseRepository.delete(despesa);
     }
