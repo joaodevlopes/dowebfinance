@@ -2,6 +2,7 @@ package com.example.dowebfinance.filter;
 
 import com.example.dowebfinance.service.CustomUserDetailsService;
 import com.example.dowebfinance.service.JwtService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -43,28 +45,35 @@ public class JwtFilter extends OncePerRequestFilter {
         // Remove o "Bearer " e fica só com o token
         String token = authHeader.substring(7);
 
-        // Extrai o email do token
-        String email = jwtService.extrairEmail(token);
+        // O filtro roda antes dos controllers, então o GlobalExceptionHandler não pega erros daqui.
+        // Token expirado/adulterado ou usuário apagado: segue sem autenticar
+        // e o SecurityConfig responde 401 se a rota exigir login.
+        try {
+            // Extrai o email do token
+            String email = jwtService.extrairEmail(token);
 
-        // Se tem email e ainda não está autenticado nessa requisição
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            // Se tem email e ainda não está autenticado nessa requisição
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // Busca o usuário no banco pelo email
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                // Busca o usuário no banco pelo email
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            // Valida o token
-            if (jwtService.tokenValido(token, userDetails)) {
+                // Valida o token
+                if (jwtService.tokenValido(token, userDetails)) {
 
-                // Cria o objeto de autenticação e registra no contexto do Spring
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        );
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // Cria o objeto de autenticação e registra no contexto do Spring
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities()
+                            );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
+            SecurityContextHolder.clearContext();
         }
 
         // Passa para o próximo filtro
