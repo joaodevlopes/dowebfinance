@@ -3,6 +3,7 @@ package com.example.dowebfinance.exception;
 import com.example.dowebfinance.dtos.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,6 +55,18 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // Trata falha no login (email ou senha errados) → retorna 401
+    // A mensagem não diz qual dos dois errou, para não revelar quais emails estão cadastrados
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleAuthentication(AuthenticationException ex){
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                "Email ou senha inválidos",
+                HttpStatus.UNAUTHORIZED.value(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     // Trata qualquer erro inesperado que não foi previsto → retorna 500
