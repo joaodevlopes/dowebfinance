@@ -4,7 +4,8 @@ import com.example.dowebfinance.enums.Category;
 import com.example.dowebfinance.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -13,7 +14,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "expenses")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpenseEntity {
