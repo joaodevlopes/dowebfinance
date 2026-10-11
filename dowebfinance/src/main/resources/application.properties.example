@@ -1,12 +1,19 @@
+# Copie este arquivo para application.properties (que é ignorado pelo git).
+# Cada valor lê uma variável de ambiente; o que vem depois do ":" é o padrão para rodar localmente
+# com o docker-compose.yml da raiz do projeto. Em produção, defina as variáveis de ambiente.
+
 # Configuração do Banco de Dados PostgreSQL
-spring.datasource.url=jdbc:postgresql://localhost:5432/nome_do_seu_banco
-spring.datasource.username=seu_usuario_aqui
-spring.datasource.password=sua_senha_aqui
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/dowebfinance}
+spring.datasource.username=${DB_USERNAME:dowebfinance}
+spring.datasource.password=${DB_PASSWORD:dowebfinance}
 
 # Configurações do Hibernate
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# Chave de assinatura do JWT: precisa ter no mínimo 32 caracteres (256 bits) para o HS256.
+# Gere uma aleatória para produção, por exemplo: openssl rand -base64 48
+api.security.token.secret=${JWT_SECRET:troque-esta-chave-local-por-uma-com-32-caracteres-ou-mais}
 
 # Configurações do Servidor
 server.port=8080
