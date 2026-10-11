@@ -11,14 +11,19 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ExpenseMapper {
     // Converter o request (o que vai chegar) em Entidade (o que salva no banco de dados)
-    @Mapping(source = "userId", target = "user.id")
+    // id é gerado pelo banco, user vem do token (definido no service) e createAt pelo @PrePersist
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "createAt", ignore = true)
     ExpenseEntity toEntity(ExpenseRequestDTO request);
 
     // Converter a entidade (o que vem do banco) em Response (O que o usuário vê)
     ExpenseResponseDTO toResponse(ExpenseEntity entity);
 
-    // Metodo do update
-    @Mapping(source = "userId", target = "user.id")
+    // Metodo do update — mesmos campos protegidos do toEntity
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "createAt", ignore = true)
     void updateEntityFromDto(ExpenseRequestDTO dto, @MappingTarget ExpenseEntity entity);
 
 }
